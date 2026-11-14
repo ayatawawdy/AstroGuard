@@ -1,8 +1,9 @@
-from pathlib import Path
+from sqlite3 import Error as DatabaseError
 
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+from backend.services import get_astronauts, get_measurements
 
 
 st.set_page_config(
@@ -11,6 +12,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
+
 st.markdown("""
 <style>
 .stApp {
@@ -33,22 +35,9 @@ st.html("""
     <div style="display:inline-block; background:#123B36; color:#68F0C0; padding:10px 18px; border-radius:24px; font-size:14px; margin-top:12px;">● SYSTEM ONLINE · DEMO MODE</div>
 </div>
 """)
-DATA_FILE = Path(__file__).resolve().parent / "health_measurements_clean.csv"
+
 METRIC_NAMES = {"heart_rate": "Heart Rate", "sleep_duration": "Sleep Hours"}
 
-
-def load_measurements(path):
-    measurements = pd.read_csv(path, dtype={"astronaut_id": "string"})
-    required = {"astronaut_id", "metric_type", "timestamp_utc", "value"}
-    missing = required.difference(measurements.columns)
-    if missing:
-        raise ValueError("Missing CSV columns: " + ", ".join(sorted(missing)))
-
-    measurements["timestamp_utc"] = pd.to_datetime(
-        measurements["timestamp_utc"], utc=True, errors="coerce"
-    )
-    measurements["value"] = pd.to_numeric(measurements["value"], errors="coerce")
-    return measurements.dropna(subset=["astronaut_id", "timestamp_utc", "value"])
 
 def get_week(measurements, astronaut_id):
     selected = measurements.loc[
@@ -60,7 +49,7 @@ def get_week(measurements, astronaut_id):
 
     selected["Day"] = selected["timestamp_utc"].dt.floor("D")
     # If a day has several readings for one metric, use its latest reading.
-    selected = selected.sort_values("timestamp_utc").drop_duplicates(
+    selected = selected.sort_values(["timestamp_utc", "measurement_id"]).drop_duplicates(
         subset=["Day", "metric_type"], keep="last"
     )
     daily = (
@@ -71,25 +60,49 @@ def get_week(measurements, astronaut_id):
     days = pd.date_range(end=daily.index.max(), periods=7, freq="D")
     return daily.reindex(days).rename_axis("Day").reset_index()
 
+
 try:
-    measurements = load_measurements(DATA_FILE)
-except FileNotFoundError:
-    st.error("Place health_measurements_clean.csv next to app.py.")
+    astronauts = get_astronauts()
+except DatabaseError:
+    st.error("Could not load astronauts. Check that the mission database is initialized.")
     st.stop()
-except (OSError, ValueError) as error:
-    st.error(f"Could not read the measurements CSV: {error}")
-    st.stop()
-
-astronauts = sorted(measurements["astronaut_id"].unique())
 if not astronauts:
-    st.warning("The measurements CSV has no usable rows.")
+    st.warning("No astronauts found. Import the mission data before opening the dashboard.")
     st.stop()
 
-astronaut_id = st.selectbox("Select astronaut", astronauts)
+astronaut_names = {
+    row["astronaut_id"]: row["display_name"] or row["astronaut_id"]
+    for row in astronauts
+}
+astronaut_id = st.selectbox(
+    "Select astronaut", list(astronaut_names), format_func=astronaut_names.__getitem__
+)
+
+try:
+    rows = [
+        row
+        for metric_type in METRIC_NAMES
+        for row in get_measurements(astronaut_id, metric_type=metric_type, limit=1000)
+    ]
+except DatabaseError:
+    st.error("Could not load measurements from the mission database.")
+    st.stop()
+
+if not rows:
+    st.warning("There are no heart rate or sleep readings for this astronaut.")
+    st.stop()
+
+measurements = pd.DataFrame(rows)
+measurements["timestamp_utc"] = pd.to_datetime(
+    measurements["timestamp_utc"], utc=True, errors="coerce", format="ISO8601"
+)
+measurements["value"] = pd.to_numeric(measurements["value"], errors="coerce")
+measurements = measurements.dropna(subset=["timestamp_utc", "value"])
 health_data = get_week(measurements, astronaut_id)
 if health_data.empty:
     st.warning("There are no heart rate or sleep readings for this astronaut.")
     st.stop()
+
 
 def create_health_chart(data, metric, title, color, unit):
     fig = go.Figure(go.Scatter(
@@ -137,9 +150,10 @@ with chart2:
 first_day = health_data["Day"].iloc[0]
 last_day = health_data["Day"].iloc[-1]
 st.caption(
-    f"Simulated astronaut health data · {first_day:%d %b %Y} to "
+    f"Astronaut health measurements · {first_day:%d %b %Y} to "
     f"{last_day:%d %b %Y} (UTC)."
 )
+
 st.divider()
 st.header("Health Intelligence & Alerts")
 
@@ -169,7 +183,7 @@ elif anomaly_detected:
             <div style="flex:1; min-width:180px; background:#101D35; padding:20px; border-radius:12px;">
                 <div style="color:#AFC6E5;">SLEEP DURATION CHANGE</div>
                 <div style="font-size:30px; color:#FFB780; font-weight:700;">{sleep_change:+.1f} hours</div>
-              </div>
+            </div>
         </div>
     </div>
     """)
@@ -189,12 +203,10 @@ else:
     </div>
     """)
 
-st.caption("SIMULATED DATA | RULE-BASED DETECTION | NOT A VALIDATED MEDICAL ALERT OR AI DIAGNOSIS")
+st.caption("DEMO RULE | RULE-BASED DETECTION | NOT A VALIDATED MEDICAL ALERT OR AI DIAGNOSIS")
 st.divider()
 st.html("""
 <div style="text-align:center; color:#91A7C4; padding:20px; font-size:14px;">
     AstroGuard | NASA Space Apps Hackathon | Mission Control Demo Prototype
 </div>
 """)
-
-        
