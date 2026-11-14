@@ -1,35 +1,13 @@
 """JSON-friendly adapter for the agreed backend contract."""
 
 from datetime import datetime, timezone
-from numbers import Real
-
-import numpy as np
-import pandas as pd
 
 from .analysis import METRICS, analyze_astronaut_data
 
 
 def analyze_health_data(history, measurements):
-    """Final backend contract; provisional success/insufficient_data statuses.
-
-    Stress is an integer-valued self-report from 1 to 5 or missing. Integral
-    floats are accepted for CSV/DataFrame interoperability; booleans and numeric
-    strings are rejected. The legacy analysis functions retain their contracts.
-    """
-    validated = []
-    for label, data in (("history", history), ("measurements", measurements)):
-        frame = pd.DataFrame(data).copy()
-        if "stress_level" not in frame:
-            raise ValueError(f"{label}: missing column: stress_level")
-        for value in frame["stress_level"]:
-            if pd.isna(value):
-                continue
-            if (isinstance(value, (bool, np.bool_)) or not isinstance(value, Real)
-                    or not np.isfinite(value) or not 1 <= value <= 5
-                    or value != int(value)):
-                raise ValueError(f"{label}: stress_level must be an integer from 1 to 5 or null")
-        validated.append(frame)
-    report = analyze_for_backend(*validated)
+    """Return the agreed response contract for daily or team measurement rows."""
+    report = analyze_for_backend(history, measurements)
     for row in report["results"]:
         row["status"] = "insufficient_data" if row["data_quality_issues"] else "success"
         if row["alert_level"] == "insufficient_data":
@@ -54,7 +32,7 @@ def analyze_for_backend(history, measurements):
         # measurement and insufficient history when both apply in this adapter.
         for metric in METRICS:
             issue = f"{metric}: insufficient historical values"
-            if metric not in baselines and issue not in issues:
+            if metric != "activity_minutes" and metric not in baselines and issue not in issues:
                 issues.append(issue)
         anomalies = [
             {"metric": anomaly["metric"],

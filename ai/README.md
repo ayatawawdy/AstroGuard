@@ -28,7 +28,7 @@ py -3 -m venv .venv
 ## Backend entry point and schema
 
 Use `from ai import analyze_health_data` for the agreed backend contract.
-`analyze_astronaut_data` remains available with its original signature, output,
+`analyze_astronaut_data` remains available with its existing signature, output structure,
 configuration options, and algorithm. The adapter calls it with unchanged default
 settings, including **7 valid historical observations per metric**. It validates the agreed stress input scale and adds output formatting, a real
 analysis timestamp, provisional status, summaries, and general suggestions.
@@ -58,30 +58,52 @@ report = analyze_health_data(
 )
 ```
 
-Both inputs accept Pandas DataFrames or lists of dictionaries. Required columns:
+Both inputs accept Pandas DataFrames or lists of dictionaries. Daily columns:
+
+The schema was verified against `data/data_dictionary.md`, `data/generate_data.py`,
+`backend/services.py`, `backend/database.py`, and `backend/import_data.py`.
+Heart rate is documented only as heart rate in bpm; resting conditions cannot be
+verified and must not be inferred. Sleep is 0–24 hours; heart rate must be positive.
+These are technical input constraints, not medical alert thresholds.
+
+The entry points also accept the team's long-form records: `astronaut_id`,
+`timestamp_utc`, `metric_type`, `value`, and `unit`. Units must be `hours`, `bpm`,
+and `1-10` for sleep, heart rate, and stress respectively. Timestamps must specify
+UTC; they are mapped to UTC calendar days. Other team metrics are ignored.
+Missing required metric readings become missing values, never zero. Duplicate
+astronaut/day/metric readings are rejected: callers must agree daily aggregation
+upstream. Select one mission per astronaut and use the same mission in history
+and evaluation; mission metadata does not change the existing response contract.
+
+`activity_minutes` is optional and absent/null readings do not make an assessment
+incomplete. Supplied activity values retain the existing baseline and anomaly
+algorithm; a supplied reading without enough history is still reported as such.
+Activity is not currently provided by the team dataset. All other columns below
+are required for daily input:
+
 
 | Column | Meaning |
 | --- | --- |
 | astronaut_id | Nonempty string; stable pseudonymous identifier |
 | date | Calendar day, preferably ISO `YYYY-MM-DD`; parsed at UTC midnight |
-| sleep_hours | Daily sleep duration in hours |
-| resting_heart_rate | Daily resting heart rate in beats/minute |
-| activity_minutes | Daily activity duration in minutes |
-| stress_level | Self-reported integer from 1 to 5, or null |
+| sleep_duration | Daily sleep duration in hours |
+| heart_rate | Daily heart rate (resting conditions are not documented) in beats/minute |
+| activity_minutes | Optional daily activity duration in minutes |
+| stress_level | Self-reported integer from 1 to 10, or null |
 
 One row per astronaut per day; no automatic duplicate aggregation. Numeric
 measurements may be missing (`None`, NaN, or blank CSV cell). Negative, infinite,
-and nonnumeric measurements, invalid IDs/dates, duplicate days, or missing columns
+and nonnumeric measurements, invalid IDs/dates, duplicate days, or missing required columns
 raise ValueError. Extra columns are ignored. Inputs are copied, sorted internally,
 and never modified. Empty inputs must still declare the schema (empty DataFrame
 with the required columns). The new adapter validates stress values in both inputs:
-nonmissing values must be numeric and integer-valued from 1 through 5. Integral
+nonmissing values must be numeric and integer-valued from 1 through 10. Integral
 floats such as 2.0 are accepted for CSV/DataFrame compatibility; booleans, numeric
 strings, fractions, and out-of-scale values raise ValueError. These are input-scale
 constraints, not medical thresholds. Missing stress values do not count toward the
 seven historical observations. `fatigue_level` is managed separately by the backend
 and is neither required nor analyzed; any supplied extra column is ignored.
-The legacy analysis entry points retain their original nonnegative stress schema.
+All analysis entry points validate the same 1–10 stress scale.
 
 For every evaluated astronaut, all history must precede their earliest evaluation
 day. Overlap/future history raises ValueError, preventing look-ahead leakage. For
@@ -119,16 +141,16 @@ Complete simulated request (the backend passes the two arrays as arguments):
 ```json
 {
   "history": [
-    {"astronaut_id": "SIM-A", "date": "2026-01-01", "sleep_hours": 8, "resting_heart_rate": 60, "activity_minutes": 45, "stress_level": 2},
-    {"astronaut_id": "SIM-A", "date": "2026-01-02", "sleep_hours": 8, "resting_heart_rate": 60, "activity_minutes": 45, "stress_level": 2},
-    {"astronaut_id": "SIM-A", "date": "2026-01-03", "sleep_hours": 8, "resting_heart_rate": 60, "activity_minutes": 45, "stress_level": 2},
-    {"astronaut_id": "SIM-A", "date": "2026-01-04", "sleep_hours": 8, "resting_heart_rate": 60, "activity_minutes": 45, "stress_level": 2},
-    {"astronaut_id": "SIM-A", "date": "2026-01-05", "sleep_hours": 8, "resting_heart_rate": 60, "activity_minutes": 45, "stress_level": 2},
-    {"astronaut_id": "SIM-A", "date": "2026-01-06", "sleep_hours": 8, "resting_heart_rate": 60, "activity_minutes": 45, "stress_level": 2},
-    {"astronaut_id": "SIM-A", "date": "2026-01-07", "sleep_hours": 8, "resting_heart_rate": 60, "activity_minutes": 45, "stress_level": 2}
+    {"astronaut_id": "SIM-A", "date": "2026-01-01", "sleep_duration": 8, "heart_rate": 60, "activity_minutes": 45, "stress_level": 2},
+    {"astronaut_id": "SIM-A", "date": "2026-01-02", "sleep_duration": 8, "heart_rate": 60, "activity_minutes": 45, "stress_level": 2},
+    {"astronaut_id": "SIM-A", "date": "2026-01-03", "sleep_duration": 8, "heart_rate": 60, "activity_minutes": 45, "stress_level": 2},
+    {"astronaut_id": "SIM-A", "date": "2026-01-04", "sleep_duration": 8, "heart_rate": 60, "activity_minutes": 45, "stress_level": 2},
+    {"astronaut_id": "SIM-A", "date": "2026-01-05", "sleep_duration": 8, "heart_rate": 60, "activity_minutes": 45, "stress_level": 2},
+    {"astronaut_id": "SIM-A", "date": "2026-01-06", "sleep_duration": 8, "heart_rate": 60, "activity_minutes": 45, "stress_level": 2},
+    {"astronaut_id": "SIM-A", "date": "2026-01-07", "sleep_duration": 8, "heart_rate": 60, "activity_minutes": 45, "stress_level": 2}
   ],
   "measurements": [
-    {"astronaut_id": "SIM-A", "date": "2026-01-08", "sleep_hours": 6, "resting_heart_rate": 60, "activity_minutes": 45, "stress_level": 2}
+    {"astronaut_id": "SIM-A", "date": "2026-01-08", "sleep_duration": 6, "heart_rate": 60, "activity_minutes": 45, "stress_level": 2}
   ]
 }
 ```
@@ -147,16 +169,16 @@ generates the actual UTC timestamp at runtime):
       "alert_level": "warning",
       "detected_anomalies": [
         {
-          "metric": "sleep_hours",
+          "metric": "sleep_duration",
           "current_value": 6.0,
           "baseline_mean": 8.0,
           "kinds": ["deviation"],
-          "explanation": "sleep_hours=6 is 8.00 scaled deviations below the historical mean 8.00 (scale 0.25)."
+          "explanation": "sleep_duration=6 is 8.00 scaled deviations below the historical mean 8.00 (scale 0.25)."
         }
       ],
-      "explanation": "Statistical changes detected in: sleep_hours.",
+      "explanation": "Statistical changes detected in: sleep_duration.",
       "recommendations": [
-        "Verify the recorded values and measurement consistency for: sleep_hours.",
+        "Verify the recorded values and measurement consistency for: sleep_duration.",
         "Review subsequent daily measurements for continued statistical changes."
       ],
       "data_quality_issues": []
@@ -183,8 +205,8 @@ reported as data-quality issues instead of anomalies. `kinds` may include
 
 For a missing sleep measurement with otherwise normal assessable metrics, the
 result has `status: "insufficient_data"`, `alert_level: null`, no detected anomalies, and
-`"sleep_hours: missing measurement"` in data_quality_issues. Fewer than seven
-valid history values gives `"sleep_hours: insufficient historical values"`.
+`"sleep_duration: missing measurement"` in data_quality_issues. Fewer than seven
+valid history values gives `"sleep_duration: insufficient historical values"`.
 Both issues are reported when both apply. Missing values use JSON `null` as input.
 An anomalous day can remain `warning` while also reporting incomplete assessment;
 an incompletely assessed day is never `normal`.
@@ -199,9 +221,9 @@ with the Backend Developer):
 | Incomplete | None | `insufficient_data` | `null` |
 | Incomplete | One or more | `insufficient_data` | `warning` |
 
-`success` means every metric could be assessed, even if it triggered an anomaly;
+`success` means every required metric and supplied activity reading could be assessed, even if it triggered an anomaly;
 it does not mean healthy. Missing measurements or insufficient history for any
-metric make the day's assessment incomplete. For example, replacing stress with
+required metric make the day's assessment incomplete. For example, replacing stress with
 `null` in the request above retains the sleep anomaly and `warning`, changes status
 to `insufficient_data`, and adds `"stress_level: missing measurement"` to
 `data_quality_issues`. The summary explicitly states that assessment is incomplete.
@@ -211,7 +233,7 @@ this evaluation array (otherwise normal, with missing stress):
 
 ```json
 [
-  {"astronaut_id": "SIM-A", "date": "2026-01-08", "sleep_hours": 8, "resting_heart_rate": 60, "activity_minutes": 45, "stress_level": null}
+  {"astronaut_id": "SIM-A", "date": "2026-01-08", "sleep_duration": 8, "heart_rate": 60, "activity_minutes": 45, "stress_level": null}
 ]
 ```
 
@@ -238,7 +260,7 @@ persistent patterns, and completing missing measurements/history. Normal results
 have an empty recommendations list. Suggestions do not prescribe treatment,
 infer a cause, or claim clinical significance.
 
-### Original analysis API (unchanged)
+### Statistical analysis API
 
 `analyze_astronaut_data` continues to return this JSON-safe dictionary:
 
@@ -248,7 +270,7 @@ infer a cause, or claim clinical significance.
   "results": [{
     "astronaut_id": "SIM-A", "date": "2026-01-10",
     "alert_level": "warning",
-    "anomalies": [{"metric": "sleep_hours", "value": 7.4,
+    "anomalies": [{"metric": "sleep_duration", "value": 7.4,
       "score": -2.4, "kinds": ["persistent_change"],
       "consecutive_days": 3, "explanation": "..."}],
     "data_quality_issues": []

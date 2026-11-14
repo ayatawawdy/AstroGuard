@@ -1,18 +1,55 @@
 """Personalized statistical monitoring; no population health thresholds."""
 
-from numbers import Integral
+from numbers import Integral, Real
 
 import numpy as np
 import pandas as pd
 
-METRICS = ("sleep_hours", "resting_heart_rate", "activity_minutes", "stress_level")
-REQUIRED = ("astronaut_id", "date", *METRICS)
+METRICS = ("sleep_duration", "heart_rate", "activity_minutes", "stress_level")
+REQUIRED = ("astronaut_id", "date", "sleep_duration", "heart_rate", "stress_level")
 # Numerical sensitivity controls in input units, NOT medical thresholds.
 SCALE_FLOORS = dict(zip(METRICS, (0.25, 2.0, 5.0, 0.25)))
 
 
-def _validate(data, label):
+def _daily_frame(data, label):
+    """Normalize team measurement rows without inventing daily aggregation."""
     frame = pd.DataFrame(data).copy()
+    if "metric_type" not in frame:
+        return frame
+    required = {"astronaut_id", "timestamp_utc", "metric_type", "value", "unit"}
+    if not required.issubset(frame.columns):
+        raise ValueError(f"{label}: missing measurement columns: {sorted(required - set(frame.columns))}")
+    units = {"sleep_duration": "hours", "heart_rate": "bpm",
+             "stress_level": "1-10", "activity_minutes": "minutes"}
+    # Other team metrics are outside this statistical module's scope.
+    frame = frame[frame["metric_type"].isin(METRICS)].copy()
+    if not frame["unit"].eq(frame["metric_type"].map(units)).all():
+        raise ValueError(f"{label}: invalid measurement unit")
+    try:
+        timestamps = frame["timestamp_utc"].map(pd.Timestamp)
+        if any(pd.isna(t) or t.tzinfo is None or t.utcoffset().total_seconds() != 0
+               for t in timestamps):
+            raise ValueError("timestamps must specify UTC")
+        frame["date"] = pd.to_datetime(frame["timestamp_utc"], utc=True).dt.normalize()
+    except (ValueError, TypeError) as exc:
+        raise ValueError(f"{label}: invalid UTC timestamp") from exc
+    if frame["astronaut_id"].isna().any() or not frame["astronaut_id"].map(
+        lambda v: isinstance(v, str) and bool(v.strip())
+    ).all():
+        raise ValueError(f"{label}: astronaut_id must be a nonempty string")
+    if "mission_id" in frame and (frame.groupby("astronaut_id")["mission_id"].nunique() > 1).any():
+        raise ValueError(f"{label}: select a single mission per astronaut")
+    if frame.duplicated(["astronaut_id", "date", "metric_type"]).any():
+        raise ValueError(f"{label}: duplicate daily metric; aggregate upstream")
+    if frame.empty:
+        return pd.DataFrame(columns=REQUIRED)
+    daily = frame.pivot(index=["astronaut_id", "date"], columns="metric_type", values="value")
+    return daily.reindex(columns=[m for m in METRICS if m != "activity_minutes"] +
+                         (["activity_minutes"] if "activity_minutes" in daily else [])).reset_index()
+
+
+def _validate(data, label):
+    frame = _daily_frame(data, label)
     missing = set(REQUIRED) - set(frame.columns)
     if missing:
         raise ValueError(f"{label}: missing columns: {sorted(missing)}")
@@ -30,7 +67,14 @@ def _validate(data, label):
         raise ValueError(f"{label}: dates must be nonmissing calendar days at UTC midnight")
     if frame.duplicated(["astronaut_id", "date"]).any():
         raise ValueError(f"{label}: duplicate astronaut/date")
+    if "activity_minutes" not in frame:
+        frame["activity_minutes"] = np.nan
     for metric in METRICS:
+        if metric == "stress_level":
+            for value in frame[metric].dropna():
+                if (isinstance(value, (bool, np.bool_)) or not isinstance(value, Real)
+                        or not np.isfinite(value) or not 1 <= value <= 10 or value != int(value)):
+                    raise ValueError(f"{label}: stress_level must be an integer from 1 to 10 or null")
         try:
             frame[metric] = pd.to_numeric(frame[metric], errors="raise").astype(float)
         except (ValueError, TypeError) as exc:
@@ -38,6 +82,10 @@ def _validate(data, label):
         values = frame[metric].dropna()
         if not np.isfinite(values).all() or (values < 0).any():
             raise ValueError(f"{label}: {metric} must be finite and nonnegative")
+    if (frame["sleep_duration"].dropna() > 24).any():
+        raise ValueError(f"{label}: sleep_duration must be between 0 and 24")
+    if (frame["heart_rate"].dropna() <= 0).any():
+        raise ValueError(f"{label}: heart_rate must be positive")
     return frame.sort_values(["astronaut_id", "date"])
 
 
@@ -80,6 +128,9 @@ def analyze_astronaut_data(history, measurements, *, min_history=7,
             anomalies, issues = [], []
             for metric in METRICS:
                 value = row[metric]
+                if metric == "activity_minutes" and pd.isna(value):
+                    runs[metric] = (None, 0, 0)
+                    continue
                 if pd.isna(value) or metric not in baselines:
                     issues.append(f"{metric}: " + ("missing measurement" if pd.isna(value)
                                                    else "insufficient historical values"))

@@ -1,4 +1,4 @@
-astronaut_id,date,sleep_hours,resting_heart_rate,activity_minutes,stress_level
+astronaut_id,date,sleep_duration,heart_rate,activity_minutes,stress_level
 SIM-A,2026-01-01,8,60,45,2
 SIM-A,2026-01-02,8,60,45,2
 SIM-A,2026-01-03,8,60,45,2
