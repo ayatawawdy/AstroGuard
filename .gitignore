@@ -1,3 +1,28 @@
+
+# Python cache
 __pycache__/
 *.py[cod]
+.mypy_cache/
+.pytest_cache/
+
+# Virtual environments
 .venv/
+venv/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+
+# Local SQLite databases
+*.db
+*.db-shm
+*.db-wal
+
+# Generated data outputs
+data/processed/
+
+# Editor files
+.vscode/
+.idea/
