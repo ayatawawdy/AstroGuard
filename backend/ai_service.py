@@ -1,7 +1,7 @@
 """Read-only SQLite-to-AI integration; no clinical aggregation assumptions."""
 
 from contextlib import closing
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 import pandas as pd
 
@@ -36,6 +36,57 @@ def analyze_astronaut_day(astronaut_id, mission_id, target_day, *,
     if target > now.date():
         raise ValueError("target_day cannot be in the future")
 
+    daily = _load_daily(astronaut_id, mission_id, target, now, aggregation, db_path)
+    # Even a wholly missing target day must produce an insufficient-data result.
+    current = daily.pop(target, {"astronaut_id": astronaut_id, "date": target.isoformat(),
+                                 **{m: None for m in METRICS}})
+    history = pd.DataFrame([daily[day] for day in sorted(daily)],
+                           columns=[*REQUIRED, "activity_minutes"])
+    return analyze_health_data(history, [current])
+
+
+def analyze_astronaut_range(astronaut_id, mission_id, start_day, end_day, *,
+                            aggregation="reject", db_path=DB_PATH):
+    """Analyze an inclusive UTC range in one AI batch with a pre-range baseline.
+
+    Missing dates are explicit null rows. Persistence starts at start_day and
+    the baseline is frozen from records strictly before it. See README.md.
+    """
+    for label, value in (("astronaut_id", astronaut_id), ("mission_id", mission_id)):
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError(f"{label} must be a nonempty string")
+    if aggregation not in ("reject", "latest"):
+        raise ValueError("aggregation must be 'reject' or 'latest'")
+    parsed = []
+    for label, value in (("start_day", start_day), ("end_day", end_day)):
+        try:
+            day = date.fromisoformat(value)
+            if day.isoformat() != value:
+                raise ValueError("use YYYY-MM-DD")
+        except (ValueError, TypeError) as exc:
+            raise ValueError(f"{label} must be YYYY-MM-DD") from exc
+        parsed.append(day)
+    start, end = parsed
+    now = datetime.now(timezone.utc)
+    if start > end:
+        raise ValueError("start_day must not be after end_day")
+    if end > now.date():
+        raise ValueError("end_day cannot be in the future")
+    daily = _load_daily(astronaut_id, mission_id, end, now, aggregation, db_path)
+    history = pd.DataFrame([daily[day] for day in sorted(daily) if day < start],
+                           columns=[*REQUIRED, "activity_minutes"])
+    measurements = []
+    for offset in range((end - start).days + 1):
+        day = start + timedelta(days=offset)
+        measurements.append(daily.get(day, {
+            "astronaut_id": astronaut_id, "date": day.isoformat(),
+            **{metric: None for metric in METRICS},
+        }))
+    return analyze_health_data(history, measurements)
+
+
+def _load_daily(astronaut_id, mission_id, target, now, aggregation, db_path):
+    """Read and select daily values for both Backend analysis entry points."""
     # Do not use the CRUD retrieval limit: it can truncate historical days.
     # Parse timestamps rather than comparing differently formatted ISO strings.
     with closing(get_connection(db_path)) as conn:
@@ -79,9 +130,4 @@ def analyze_astronaut_day(astronaut_id, mission_id, target_day, *,
     for (day, metric), (_, _, value) in selected.items():
         daily.setdefault(day, {"astronaut_id": astronaut_id, "date": day.isoformat(),
                                **{m: None for m in METRICS}})[metric] = value
-    # Even a wholly missing target day must produce an insufficient-data result.
-    current = daily.pop(target, {"astronaut_id": astronaut_id, "date": target.isoformat(),
-                                 **{m: None for m in METRICS}})
-    history = pd.DataFrame([daily[day] for day in sorted(daily)],
-                           columns=[*REQUIRED, "activity_minutes"])
-    return analyze_health_data(history, [current])
+    return daily

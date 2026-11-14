@@ -62,3 +62,45 @@ python -m unittest discover -s backend -v
 python data/test_data_pipeline.py
 git diff --check
 ```
+
+## Inclusive date-range analysis
+
+```python
+from backend.ai_service import analyze_astronaut_range
+
+report = analyze_astronaut_range(
+    "AST-001", "MISSION-DEMO-01", "2026-10-08", "2026-10-12",
+    aggregation="latest",
+)
+```
+
+`start_day` and `end_day` are inclusive ISO `YYYY-MM-DD` UTC calendar dates.
+Reversed, malformed, and future ranges raise ValueError. The range service uses
+one database read and calls `analyze_health_data()` once with the entire range.
+The baseline includes only available records strictly before `start_day`, frozen
+for all evaluated days, as required by the existing AI algorithm. Evaluation
+records never enter the baseline, even for later days in the range. There is no
+look-ahead or per-day restart of persistence. Minimum history and statistical
+thresholds remain unchanged.
+
+The AI tracks each metric separately: same-direction scores at least 2 for three
+consecutive days trigger `persistent_change`; scores at least 3 independently
+trigger `deviation`. Gaps, missing readings, direction changes, and scores below
+the persistence threshold reset the run. Multiple rules on one metric still count
+as one contributor to a combined anomaly. Persistence starts at the range start;
+include earlier evaluation days to capture runs beginning before it.
+
+One result is returned for every requested date, sorted chronologically, including
+wholly missing days as insufficient-data results. A range with no database readings
+therefore returns missing/insufficient-data results rather than an empty list.
+Missing activity remains optional. Empty pre-range history is supported. History
+is not expanded within the range: if a baseline lacks seven valid values at the
+start, that metric remains unassessable throughout the batch. A one-day range
+matches `analyze_astronaut_day()` apart from its runtime analysis timestamp.
+
+Both services share the same UTC normalization, mission/astronaut isolation,
+future-reading exclusion, unit checks, and duplicate policies. The original
+single-day service remains available with unchanged behavior. No persistence is
+stored between calls. Large ranges materialize a result for every date; callers
+should choose practical evaluation windows. This range service supersedes the
+single-day-only limitation above without changing that entry point.
