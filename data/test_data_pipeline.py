@@ -1,0 +1,114 @@
+
+from pathlib import Path
+from tempfile import TemporaryDirectory
+import unittest
+import pandas as pd
+
+from clean_data import clean_data
+
+BASE_DIR = Path(__file__).resolve().parent
+SOURCE_FILE = BASE_DIR / "synthetic" / "health_measurements.csv"
+
+
+class TestDataPipeline(unittest.TestCase):
+
+    def test_corrupted_data(self):
+        original_bytes = SOURCE_FILE.read_bytes()
+        original_df = pd.read_csv(SOURCE_FILE)
+
+        # Use one valid measurement as the template
+        base_record = original_df.iloc[0].to_dict()
+
+        def make_record(measurement_id, **changes):
+            record = base_record.copy()
+            record["measurement_id"] = measurement_id
+            record.update(changes)
+            return record
+
+        # Create five intentionally invalid records
+        invalid_records = [
+            make_record("TEST-MISSING", value=None),
+
+            make_record(
+                original_df.iloc[0]["measurement_id"]
+            ),
+
+            make_record("TEST-UNIT", unit="mmHg"),
+
+            make_record(
+                "TEST-DATE",
+                timestamp_utc="invalid-date"
+            ),
+
+            make_record(
+                "TEST-VALUE",
+                value="not-a-number"
+            ),
+        ]
+
+        test_df = pd.concat(
+            [original_df, pd.DataFrame(invalid_records)],
+            ignore_index=True
+        )
+
+        # Temporary files prevent changes to the real dataset
+        with TemporaryDirectory() as temp:
+            temp_dir = Path(temp)
+            input_file = temp_dir / "corrupted_data.csv"
+            output_dir = temp_dir / "results"
+
+            test_df.to_csv(input_file, index=False)
+
+            clean_df, rejected_df = clean_data(
+                input_file=input_file,
+                output_dir=output_dir
+            )
+
+            # Verify record counts
+            self.assertEqual(len(test_df), 725)
+            self.assertEqual(len(clean_df), 720)
+            self.assertEqual(len(rejected_df), 5)
+
+            # Verify no duplicated IDs remain
+            self.assertTrue(
+                clean_df["measurement_id"].is_unique
+            )
+
+            # Verify the expected rejection reasons
+            reasons = rejected_df["rejection_reason"]
+
+            self.assertEqual(
+                reasons.str.contains(
+                    "Invalid numeric value"
+                ).sum(),
+                2
+            )
+
+            for expected in [
+                "Duplicate measurement ID",
+                "Invalid unit",
+                "Invalid or future timestamp",
+            ]:
+                self.assertTrue(
+                    reasons.str.contains(
+                        expected, regex=False
+                    ).any()
+                )
+
+            # Verify output files were generated
+            self.assertTrue(
+                (output_dir / "health_measurements_clean.csv").exists()
+            )
+            self.assertTrue(
+                (output_dir / "rejected_records.csv").exists()
+            )
+
+        # Verify original dataset was not modified
+        self.assertEqual(
+            SOURCE_FILE.read_bytes(),
+            original_bytes
+        )
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)
