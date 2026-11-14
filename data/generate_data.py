@@ -23,7 +23,7 @@ UNITS = {
     "stress_level": "1-10",
 }
 
-records = []
+records: list[dict[str, str | float | bool]] = []
 
 for astronaut_id in ASTRONAUTS:
     for day in range(DAYS):
