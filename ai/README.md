@@ -132,6 +132,46 @@ Persistence spans only the measurements supplied in a call; include enough
 recent evaluation days on subsequent calls. Both high and low deviations count.
 Alerts repeat on each qualifying day; downstream consumers can deduplicate.
 
+## Combined anomaly detection
+
+After detecting individual anomalies, the AI checks each astronaut/day result.
+Two or more distinct anomalous metrics produce one combined group containing all
+contributing metrics, in the existing metric order. Both `deviation` and
+`persistent_change` qualify; a metric triggering both counts once. Missing values
+and metrics without baselines do not contribute. Optional activity contributes
+only when supplied and independently detected as anomalous. Dates and astronauts
+are never pooled, and no additional thresholds or severity levels are introduced.
+
+All three entry points optionally add `combined_anomalies` to each result. It is
+omitted when fewer than two metrics have detected anomalies. Existing response
+fields, individual anomaly structures, summaries, recommendations, statuses, and
+alert levels retain their behavior. Consumers should allow this additional field;
+strict response schemas must declare it optional before consuming combined alerts.
+
+Example additional field for sleep below baseline and heart rate above baseline:
+
+```json
+{
+  "combined_anomalies": [
+    {
+      "metrics": ["sleep_duration", "heart_rate"],
+      "contributors": [
+        {"metric": "sleep_duration", "direction": "below"},
+        {"metric": "heart_rate", "direction": "above"}
+      ],
+      "explanation": "Detected statistical anomalies occurred together on the same day for this astronaut: sleep_duration below its personal historical mean; heart_rate above its personal historical mean. Co-occurrence does not establish a cause or medical diagnosis."
+    }
+  ]
+}
+```
+
+`direction` describes the current value relative to that astronaut's frozen
+historical mean. The individual anomaly records retain values, baseline evidence,
+and detection kinds. A group describes co-occurrence within a UTC calendar day,
+not simultaneous readings, correlation, cause, or clinical significance. There
+is no separate combined persistence rule. Existing daily aggregation limitations
+and minimum-history requirements still apply.
+
 ## Output
 
 ### Agreed backend JSON examples

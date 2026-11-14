@@ -68,4 +68,6 @@ def analyze_for_backend(history, measurements):
             "detected_anomalies": anomalies, "explanation": explanation,
             "recommendations": recommendations, "data_quality_issues": issues,
         })
+        if "combined_anomalies" in row:
+            results[-1]["combined_anomalies"] = row["combined_anomalies"]
     return {"results": results}

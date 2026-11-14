@@ -165,4 +165,23 @@ def analyze_astronaut_data(history, measurements, *, min_history=7,
             results.append({"astronaut_id": astronaut_id, "date": row["date"].date().isoformat(),
                             "alert_level": "warning" if anomalies else "normal" if not issues else "insufficient_data",
                             "anomalies": anomalies, "data_quality_issues": issues})
+            if len(anomalies) >= 2:
+                contributors = [
+                    {"metric": anomaly["metric"],
+                     "direction": "above" if anomaly["score"] > 0 else "below"}
+                    for anomaly in anomalies
+                ]
+                changes = "; ".join(
+                    f"{item['metric']} {item['direction']} its personal historical mean"
+                    for item in contributors
+                )
+                results[-1]["combined_anomalies"] = [{
+                    "metrics": [item["metric"] for item in contributors],
+                    "contributors": contributors,
+                    "explanation": (
+                        "Detected statistical anomalies occurred together on the same day "
+                        f"for this astronaut: {changes}. "
+                        "Co-occurrence does not establish a cause or medical diagnosis."
+                    ),
+                }]
     return {"baselines": all_baselines, "results": results}
