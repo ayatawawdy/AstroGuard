@@ -1,9 +1,12 @@
-from sqlite3 import Error as DatabaseError
-
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-from backend.services import get_astronauts, get_measurements
+from backend.frontend_service import (
+    analyze_astronaut_range,
+    get_astronauts,
+    get_measurements,
+    get_missions,
+)
 
 
 st.set_page_config(
@@ -22,11 +25,11 @@ st.markdown("""
 .block-container { padding: 2rem 1rem; max-width: 1500px; }
 h1, h2, h3 { color: #F4F8FF !important; font-family: 'Segoe UI', sans-serif; }
 p { color: #C6D6EB; }
+[data-testid="stAlert"] p { color: #24334a !important; }
 [data-testid="stCaptionContainer"] p { color: #91A7C4 !important; }
 hr { border-color: #29476A !important; }
 </style>
 """, unsafe_allow_html=True)
-
 st.html("""
 <div style="padding:34px; background:linear-gradient(120deg,#142743,#0C1830); border:1px solid #29476A; border-radius:20px; margin-bottom:32px;">
     <div style="color:#56DDF2; font-size:13px; letter-spacing:3px; font-weight:700;">MISSION CONTROL / HEALTH INTELLIGENCE</div>
@@ -60,7 +63,6 @@ def get_week(measurements, astronaut_id):
     days = pd.date_range(end=daily.index.max(), periods=7, freq="D")
     return daily.reindex(days).rename_axis("Day").reset_index()
 
-
 try:
     astronauts = get_astronauts()
 except DatabaseError:
@@ -79,13 +81,23 @@ astronaut_id = st.selectbox(
 )
 
 try:
+    missions = get_missions(astronaut_id)
+    if not missions:
+        st.info("No missions found for this astronaut.")
+        st.stop()
+
+    mission_id = st.selectbox(
+        "Select mission", [mission["mission_id"] for mission in missions]
+    )
     rows = [
         row
         for metric_type in METRIC_NAMES
-        for row in get_measurements(astronaut_id, metric_type=metric_type, limit=1000)
+        for row in get_measurements(
+            astronaut_id, metric_type=metric_type, mission_id=mission_id, limit=1000
+        )
     ]
 except DatabaseError:
-    st.error("Could not load measurements from the mission database.")
+    st.error("Could not load missions or measurements from the database.")
     st.stop()
 
 if not rows:
@@ -146,7 +158,6 @@ with chart2:
         width="stretch",
         config={"displaylogo": False},
     )
-
 first_day = health_data["Day"].iloc[0]
 last_day = health_data["Day"].iloc[-1]
 st.caption(
@@ -157,56 +168,44 @@ st.caption(
 st.divider()
 st.header("Health Intelligence & Alerts")
 
-heart_rate_change = health_data["Heart Rate"].iloc[-1] - health_data["Heart Rate"].iloc[0]
-sleep_change = health_data["Sleep Hours"].iloc[-1] - health_data["Sleep Hours"].iloc[0]
-can_assess = pd.notna(heart_rate_change) and pd.notna(sleep_change)
-
-# Use the existing demonstration rule on the first and last days of the window.
-anomaly_detected = can_assess and heart_rate_change >= 10 and sleep_change <= -2
-
-if not can_assess:
-    st.info("The demo rule needs both measurements on the first and last days of the window.")
-elif anomaly_detected:
-    st.html(f"""
-    <div style="background:#172640; border:1px solid #A66A43; border-left:5px solid #FFAA66;
-                border-radius:16px; padding:26px; margin:20px 0;">
-        <div style="color:#FFB780; font-size:13px; letter-spacing:2px; font-weight:700;">
-            WARNING / HEALTH MONITORING
-        </div>
-        <h3>Potential Health Anomaly Detected</h3>
-        <p>Combined changes met the demo rule between {first_day:%d %b} and {last_day:%d %b}.</p>
-        <div style="display:flex; gap:20px; flex-wrap:wrap; margin-top:24px;">
-            <div style="flex:1; min-width:180px; background:#101D35; padding:20px; border-radius:12px;">
-                <div style="color:#AFC6E5;">HEART RATE CHANGE</div>
-                <div style="font-size:30px; color:#FFB780; font-weight:700;">{heart_rate_change:+.0f} bpm</div>
-            </div>
-            <div style="flex:1; min-width:180px; background:#101D35; padding:20px; border-radius:12px;">
-                <div style="color:#AFC6E5;">SLEEP DURATION CHANGE</div>
-                <div style="font-size:30px; color:#FFB780; font-weight:700;">{sleep_change:+.1f} hours</div>
-            </div>
-        </div>
-    </div>
-    """)
-    st.html("""
-    <div style="background:#142C40; border:1px solid #315B70; border-radius:16px; padding:24px;">
-        <div style="color:#56DDF2; font-size:17px; font-weight:700;">RECOMMENDED ACTION</div>
-        <p>Review recent sleep patterns, workload, and physical activity.
-        Consult the mission medical team to evaluate the observed changes.</p>
-    </div>
-    """)
+try:
+    report = analyze_astronaut_range(
+        astronaut_id,
+        mission_id,
+        first_day.date().isoformat(),
+        last_day.date().isoformat(),
+        aggregation="latest",
+    )
+except (DatabaseError, ValueError) as error:
+    st.error(f"Could not analyze the selected measurements: {error}")
 else:
-    st.html(f"""
-    <div style="background:#123B36; border:1px solid #2D8A75; border-radius:16px; padding:24px; margin:20px 0;">
-        <h3>No Anomaly Detected</h3>
-        <p>The changes in this window did not meet the combined demo rule.</p>
-        <p>Heart rate: {heart_rate_change:+.0f} bpm · Sleep: {sleep_change:+.1f} hours</p>
-    </div>
-    """)
+    results = report["results"]
+    warnings = [result for result in results if result["alert_level"] == "warning"]
+    incomplete = [result for result in results if result["data_quality_issues"]]
 
-st.caption("DEMO RULE | RULE-BASED DETECTION | NOT A VALIDATED MEDICAL ALERT OR AI DIAGNOSIS")
+    for result in warnings:
+        st.warning(f"{result['date']} · Potential Health Anomaly Detected")
+        for anomaly in result["detected_anomalies"]:
+            st.write(anomaly["explanation"])
+        if result["recommendations"]:
+            st.markdown("**Recommended action**")
+            for recommendation in result["recommendations"]:
+                st.write(recommendation)
+    if incomplete:
+        st.info("Some measurements in this window could not be fully assessed.")
+        with st.expander("See missing measurements or history"):
+            for result in incomplete:
+                st.write(result["date"], result["data_quality_issues"])
+
+    if results and not warnings and not incomplete:
+        st.success("No statistical anomaly detected in the selected window.")
+    elif not results:
+        st.info("No analysis results for the selected window.")
+
+st.caption("Statistical screening for demonstration purposes.")
 st.divider()
 st.html("""
 <div style="text-align:center; color:#91A7C4; padding:20px; font-size:14px;">
     AstroGuard | NASA Space Apps Hackathon | Mission Control Demo Prototype
 </div>
-""")
+""")    
