@@ -30,50 +30,7 @@ hr { border-color: #29476A !important; }
 # -----------------------------------
 
 
-raw_data = pd.read_csv("data/synthetic/health_measurements.csv")
 
-raw_data["timestamp_utc"] = pd.to_datetime(
-    raw_data["timestamp_utc"], utc=True
-)
-
-astronaut_id = raw_data["astronaut_id"].iloc[0]
-astronaut_data = raw_data[
-    raw_data["astronaut_id"] == astronaut_id
-]
-
-health_data = astronaut_data.pivot_table(
-    index="timestamp_utc",
-    columns="metric_type",
-    values="value",
-    aggfunc="mean"
-).sort_index().tail(7).reset_index()
-
-health_data = health_data.rename(columns={
-    "heart_rate": "Heart Rate",
-    "sleep_duration": "Sleep Hours"
-})
-
-health_data["Day"] = health_data["timestamp_utc"].dt.strftime("%a")
-health_data["Activity"] = 0
-
-
-latest = health_data.iloc[-1]
-
-heart_rate_change = (
-    health_data["Heart Rate"].iloc[-1]
-    - health_data["Heart Rate"].iloc[0]
-)
-
-sleep_change = (
-    health_data["Sleep Hours"].iloc[-1]
-    - health_data["Sleep Hours"].iloc[0]
-)
-
-# Demo rules only, not clinical thresholds
-anomaly_detected = (
-    heart_rate_change >= 10
-    and sleep_change <= -2
-)
 
 # -----------------------------------
 # HEADER
@@ -92,7 +49,7 @@ st.markdown(
     <p style="font-size:19px; color:#B8CBE4;">Astronaut Health Monitoring</p>
     <div style="display:inline-block; background:#123B36; color:#68F0C0; padding:10px 18px; border-radius:24px; font-size:14px; margin-top:12px;">● SYSTEM ONLINE · DEMO MODE</div>
 </div>
-""")
+""", unsafe_allow_html=True)
 DATA_FILE = Path(__file__).resolve().parent / "health_measurements_clean.csv"
 METRIC_NAMES = {"heart_rate": "Heart Rate", "sleep_duration": "Sleep Hours"}
 
@@ -249,15 +206,10 @@ else:
     </div>
     """)
 
-else:
+
 
    
-   st.markdown("""
-    <div style="background:#123B36; border:1px solid #2D8A75; border-radius:16px; padding:24px; margin:20px 0;">
-    <h3 style="color:#68F0C0;">No Anomaly Detected</h3>
-    <p style="color:#D4E0F0;">No unusual combined changes were identified by the current demonstration rules.</p>
-    </div>
-     """, unsafe_allow_html=True)
+   
 
 
 st.caption(
