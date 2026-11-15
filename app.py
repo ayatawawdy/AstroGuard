@@ -1,6 +1,9 @@
+from sqlite3 import DatabaseError
+
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+from backend.bootstrap import prepare_database
 from backend.frontend_service import (
     analyze_astronaut_range,
     get_astronauts,
@@ -62,6 +65,19 @@ def get_week(measurements, astronaut_id):
     )
     days = pd.date_range(end=daily.index.max(), periods=7, freq="D")
     return daily.reindex(days).rename_axis("Day").reset_index()
+
+@st.cache_resource(show_spinner="Preparing mission database...")
+def ensure_database_ready():
+    """Create tables and import demo data once per server process."""
+    prepare_database()
+    return True
+
+
+try:
+    ensure_database_ready()
+except (DatabaseError, OSError, RuntimeError, ValueError) as error:
+    st.error(f"Could not prepare the mission database: {error}")
+    st.stop()
 
 try:
     astronauts = get_astronauts()
@@ -208,4 +224,4 @@ st.html("""
 <div style="text-align:center; color:#91A7C4; padding:20px; font-size:14px;">
     AstroGuard | NASA Space Apps Hackathon | Mission Control Demo Prototype
 </div>
-""")    
+""")

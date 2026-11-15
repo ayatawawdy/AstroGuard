@@ -1,0 +1,7 @@
+# AstroGuard runtime and test dependencies (Python 3.12).
+# Install from the repository root:  python -m pip install -r requirements.txt
+# sqlite3 and unittest ship with Python and need no installation.
+streamlit>=1.50,<2
+pandas>=2.2,<4
+numpy>=1.26,<3
+plotly>=5.24,<8
