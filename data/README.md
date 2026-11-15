@@ -91,6 +91,23 @@ The cleaned dataset can be used by:
 
 The shared data format is documented in `data_dictionary.md`.
 
+## Sleep & Alertness Scenarios (Stage 1A)
+
+A separate, reproducible generator creates fictional sleep sessions, optional
+sleep stages, PVT-inspired reaction-time assessments and optional cortisol
+observations for four scenarios (stable; shifted schedule; reduced sleep with
+slower reactions; insufficient/missing data). It does not modify the legacy
+720-measurement dataset.
+
+```bash
+python data/generate_sleep_alertness.py        # writes data/synthetic/sleep_alertness/
+python -m backend.import_sleep_alertness       # optional: load into the SQLite database
+```
+
+The same seed always produces byte-identical files. Data contracts are in
+`docs/contracts.md`. All records are labeled synthetic and are not clinically
+validated.
+
 ## Limitations
 
 - All data is synthetic.

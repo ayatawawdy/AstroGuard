@@ -5,6 +5,7 @@ the real backend/astroguard.db and data/processed/ outputs are never touched.
 """
 
 import json
+import os
 import shutil
 import sqlite3
 import subprocess
@@ -35,6 +36,8 @@ def summary(at):
         "headers": [h.value for h in at.header],
         "charts": len(at.get("plotly_chart")),
         "astronaut_options": list(at.selectbox[0].options) if at.selectbox else [],
+        "status_banners": sum("Suggested action" in h.proto.body for h in at.get("html")),
+        "selected": at.selectbox[0].value if at.selectbox else None,
     }}
 
 first = AppTest.from_file("app.py", default_timeout=120).run()
@@ -53,9 +56,9 @@ print({RESULT_PREFIX!r} + json.dumps(result))
 
 
 def copy_repository(destination):
-    ignore = shutil.ignore_patterns("__pycache__", "*.db", "*.db-*", "processed")
+    ignore = shutil.ignore_patterns("__pycache__", "*.db", "*.db-*", "processed", "external")
     shutil.copy2(APP_FILE, destination / "app.py")
-    for package in ("ai", "backend", "data"):
+    for package in ("ai", "backend", "data", "components"):
         shutil.copytree(REPO_ROOT / package, destination / package, ignore=ignore)
 
 
@@ -69,9 +72,11 @@ class FreshCheckoutStartupTests(unittest.TestCase):
         copy_repository(cls.workdir)
         assert not (cls.workdir / "backend" / "astroguard.db").exists()
 
+        env = {k: v for k, v in os.environ.items() if k != "ASTROGUARD_DB_PATH"}
         completed = subprocess.run(
             [sys.executable, "-c", E2E_SCRIPT],
             cwd=cls.workdir,
+            env=env,
             capture_output=True,
             text=True,
             encoding="utf-8",
@@ -89,16 +94,33 @@ class FreshCheckoutStartupTests(unittest.TestCase):
     def setUp(self):
         self.assertIsNotNone(self.result, f"App test harness failed:\n{self.output}")
 
-    def assert_dashboard_rendered(self, run):
+    # Stage 1B: app.py became the Mission Control dashboard (requested redesign). The
+    # original single-page assertions (exactly two selectboxes, two headers, two charts)
+    # described the old layout; the same invariants are now checked for the new layout,
+    # and the original legacy health page is checked when a legacy astronaut is selected.
+    def assert_dashboard_rendered(self, run, *, legacy=False):
         self.assertEqual(run["exceptions"], [])
         self.assertEqual(run["errors"], [])
-        self.assertEqual(run["selectboxes"], ["Select astronaut", "Select mission"])
-        self.assertEqual(run["headers"], ["Health Trends", "Health Intelligence & Alerts"])
-        self.assertEqual(run["charts"], 2)
+        self.assertEqual(run["selectboxes"][:3],
+                         ["Select astronaut", "Select mission", "Mission task context"])
+        self.assertEqual(run["status_banners"], 1)
+        self.assertGreaterEqual(run["charts"], 1)
+        if legacy:
+            self.assertEqual(run["headers"], ["Health Trends", "Health Intelligence & Alerts"])
+            self.assertGreaterEqual(run["charts"], 2)
 
     def test_first_start_prepares_database_and_renders(self):
         self.assert_dashboard_rendered(self.result["first"])
-        self.assertEqual(len(self.result["first"]["astronaut_options"]), 3)
+        options = self.result["first"]["astronaut_options"]
+        # Options are display labels; each contains the astronaut ID.
+        self.assertEqual(len(options), 8)
+        for label, astronaut in zip(options, ["AST-S01", "AST-S02", "AST-S03", "AST-S04"]):
+            self.assertIn(astronaut, label)
+            self.assertIn("fictional", label)
+        self.assertIn("LIVE-USER-01", options[4])        # separate interactive test profile
+        self.assertEqual(sorted(options[5:]),
+                         [f"AST-00{i} — legacy health demo" for i in (1, 2, 3)])
+        self.assertEqual(self.result["first"]["selected"], "AST-S01")
 
     def test_database_populated_from_demo_data(self):
         db_file = self.workdir / "backend" / "astroguard.db"
@@ -111,7 +133,9 @@ class FreshCheckoutStartupTests(unittest.TestCase):
         self.assertEqual(count, 720)
 
     def test_rerun_after_selecting_another_astronaut(self):
-        self.assert_dashboard_rendered(self.result["rerun"])
+        # The last option is a legacy astronaut, so the original health page must render.
+        self.assertEqual(self.result["rerun"]["selected"], "AST-003")
+        self.assert_dashboard_rendered(self.result["rerun"], legacy=True)
 
     def test_second_start_on_existing_database(self):
         self.assert_dashboard_rendered(self.result["second_start"])

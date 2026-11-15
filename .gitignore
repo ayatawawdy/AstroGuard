@@ -26,3 +26,6 @@ data/processed/
 # Editor files
 .vscode/
 .idea/
+
+# External research datasets (downloaded locally; not redistributed via Git)
+data/external/
