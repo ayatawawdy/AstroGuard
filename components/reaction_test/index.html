@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AstroGuard reaction-time test</title>
+<!--
+  AstroGuard PVT-inspired reaction-time test (demonstration mode).
+  Plain HTML/JS Streamlit component: no Node.js, npm or build step.
+  It speaks the Streamlit component v1 message protocol directly
+  (componentReady / render / setComponentValue / setFrameHeight).
+
+  Timing: stimulus onset is taken from requestAnimationFrame (the first frame
+  in which the stimulus is painted) and the response from the input event's
+  timeStamp; both use the browser's high-resolution monotonic clock
+  (performance.now timebase). No server round trip is inside the measured
+  interval. Display refresh, input-device and OS latency still apply, so the
+  values are NOT a validated PVT measurement.
+-->
+<style>
+  :root { --bg:#101D35; --panel:#172640; --line:#29476A; --text:#EAF4FF; --muted:#91A7C4;
+          --accent:#56DDF2; --warn:#FFB547; --bad:#FF6B6B; --ok:#68F0C0; }
+  html, body { margin:0; background:transparent; color:var(--text);
+               font-family:'Segoe UI', system-ui, sans-serif; }
+  #wrap { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px; }
+  #arena { height:220px; border-radius:12px; background:#0B1426; border:1px solid var(--line);
+           display:flex; align-items:center; justify-content:center; user-select:none;
+           cursor:pointer; font-size:20px; color:var(--muted); text-align:center; outline:none; }
+  #arena.wait { color:var(--muted); }
+  #arena.go { background:#2A0F12; color:var(--bad); font-size:56px; font-weight:700; }
+  #arena.early { background:#2B2410; color:var(--warn); }
+  button { background:var(--accent); color:#06121F; border:0; border-radius:10px; padding:10px 18px;
+           font-size:15px; font-weight:700; cursor:pointer; }
+  button:disabled { opacity:.45; cursor:default; }
+  .row { display:flex; gap:12px; align-items:center; margin-top:12px; flex-wrap:wrap; }
+  .muted { color:var(--muted); font-size:13px; }
+  #summary { margin-top:10px; font-size:14px; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="arena" class="wait" tabindex="0">Press <b>&nbsp;Start&nbsp;</b> to begin</div>
+  <div class="row">
+    <button id="start">Start assessment</button>
+    <span id="progress" class="muted"></span>
+  </div>
+  <div id="summary" class="muted"></div>
+</div>
+<script>
+(function () {
+  "use strict";
+  var send = function (type, extra) {
+    var msg = Object.assign({ isStreamlitMessage: true, type: type }, extra || {});
+    window.parent.postMessage(msg, "*");
+  };
+  var setHeight = function () {
+    send("streamlit:setFrameHeight", { height: document.body.scrollHeight + 8 });
+  };
+
+  var cfg = { trials: 10, min_isi_ms: 2000, max_isi_ms: 7000, timeout_ms: 3000,
+              lapse_ms: 500, false_start_ms: 100 };
+  var arena = document.getElementById("arena");
+  var startBtn = document.getElementById("start");
+  var progress = document.getElementById("progress");
+  var summary = document.getElementById("summary");
+
+  var state = "idle", trials = [], index = 0, isi = 0, onset = null;
+  var waitTimer = null, timeoutTimer = null, counterFrame = null, startedAt = null;
+
+  window.addEventListener("message", function (event) {
+    var data = event.data || {};
+    if (data.type === "streamlit:render" && data.args) {
+      ["trials", "min_isi_ms", "max_isi_ms", "timeout_ms", "lapse_ms", "false_start_ms"]
+        .forEach(function (k) { if (typeof data.args[k] === "number") { cfg[k] = data.args[k]; } });
+      setHeight();
+    }
+  });
+
+  function show(cls, html) { arena.className = cls; arena.innerHTML = html; }
+
+  function begin() {
+    trials = []; index = 0; state = "running";
+    startedAt = new Date(); startedAt.setMilliseconds(0);
+    startBtn.disabled = true; summary.textContent = "";
+    arena.focus();
+    nextTrial();
+  }
+
+  function nextTrial() {
+    if (index >= cfg.trials) { finish(); return; }
+    index += 1;
+    progress.textContent = "Trial " + index + " of " + cfg.trials;
+    isi = Math.round(cfg.min_isi_ms + Math.random() * (cfg.max_isi_ms - cfg.min_isi_ms));
+    onset = null;
+    state = "waiting";
+    show("wait", "Wait for the red counter&hellip;");
+    waitTimer = setTimeout(stimulus, isi);
+  }
+
+  function stimulus() {
+    state = "stimulus";
+    show("go", "0");
+    requestAnimationFrame(function (ts) {
+      onset = ts;  // first painted frame of the stimulus
+      var tick = function (now) {
+        if (state !== "stimulus") { return; }
+        arena.textContent = String(Math.max(0, Math.round(now - onset)));
+        counterFrame = requestAnimationFrame(tick);
+      };
+      counterFrame = requestAnimationFrame(tick);
+    });
+    timeoutTimer = setTimeout(function () {
+      if (state !== "stimulus") { return; }
+      record(null, false);  // no response: counted as a lapse
+    }, cfg.timeout_ms);
+  }
+
+  function record(rt, early) {
+    clearTimeout(timeoutTimer); clearTimeout(waitTimer);
+    if (counterFrame) { cancelAnimationFrame(counterFrame); }
+    trials.push({ trial_index: index, interstimulus_interval_ms: isi,
+                  reaction_time_ms: rt === null ? null : Math.round(rt * 10) / 10,
+                  responded_before_stimulus: early });
+    state = "between";
+    if (early) { show("early", "Too early &mdash; false start recorded"); }
+    else if (rt === null) { show("wait", "No response recorded (missed)"); }
+    else { show("wait", Math.round(rt) + " ms"); }
+    setTimeout(nextTrial, 900);
+  }
+
+  function respond(event) {
+    if (state === "waiting") { record(null, true); return; }
+    if (state === "stimulus") {
+      if (onset === null) { return; }  // stimulus not painted yet; ignore
+      record(Math.max(0, event.timeStamp - onset), false);
+    }
+  }
+
+  function finish() {
+    state = "done"; startBtn.disabled = false; startBtn.textContent = "Run again";
+    var rts = trials.filter(function (t) { return t.reaction_time_ms !== null; })
+                    .map(function (t) { return t.reaction_time_ms; })
+                    .filter(function (v) { return v >= cfg.false_start_ms; })
+                    .sort(function (a, b) { return a - b; });
+    var median = rts.length ? (rts.length % 2 ? rts[(rts.length - 1) / 2]
+                 : (rts[rts.length / 2 - 1] + rts[rts.length / 2]) / 2) : null;
+    var lapses = trials.filter(function (t) {
+      return !t.responded_before_stimulus &&
+             (t.reaction_time_ms === null || t.reaction_time_ms >= cfg.lapse_ms); }).length;
+    var early = trials.filter(function (t) {
+      return t.responded_before_stimulus ||
+             (t.reaction_time_ms !== null && t.reaction_time_ms < cfg.false_start_ms); }).length;
+    show("wait", "Assessment complete");
+    progress.textContent = "";
+    summary.textContent = "Median " + (median === null ? "n/a" : Math.round(median) + " ms") +
+      " · lapses " + lapses + " · false starts " + early +
+      " — sending to AstroGuard for storage and re-evaluation…";
+    send("streamlit:setComponentValue", { dataType: "json", value: {
+      nonce: String(Date.now()) + "-" + Math.random().toString(36).slice(2, 10),
+      started_at_utc: startedAt.toISOString().replace(".000Z", "Z"),
+      trials: trials, trial_target: cfg.trials, timeout_ms: cfg.timeout_ms,
+      timing: "requestAnimationFrame onset + event.timeStamp (browser high-resolution clock)"
+    }});
+    setHeight();
+  }
+
+  startBtn.addEventListener("click", begin);
+  arena.addEventListener("pointerdown", function (e) { if (state !== "idle" && state !== "done") { e.preventDefault(); respond(e); } });
+  window.addEventListener("keydown", function (e) {
+    if (e.code === "Space" || e.key === " ") { e.preventDefault(); if (state !== "idle" && state !== "done") { respond(e); } }
+  });
+
+  send("streamlit:componentReady", { apiVersion: 1 });
+  setHeight();
+})();
+</script>
+</body>
+</html>

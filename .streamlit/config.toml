@@ -1,0 +1,10 @@
+# AstroGuard Mission Control theme (dark, NASA-inspired).
+# Applies to native Streamlit widgets (buttons, selectboxes, toasts, tabs, tables)
+# when the app is started from the repository root: python -m streamlit run app.py
+[theme]
+base = "dark"
+primaryColor = "#56DDF2"
+backgroundColor = "#0B1426"
+secondaryBackgroundColor = "#172640"
+textColor = "#EAF4FF"
+font = "sans serif"

@@ -1,0 +1,11 @@
+cortisol_id,astronaut_id,mission_id,sample_utc,value,unit,sampling_method,minutes_since_awakening,sleep_session_id,data_origin,is_synthetic,notes
+CRT-S01-D00,AST-S01,MISSION-SLEEP-DEMO-01,2026-10-02T07:09:00Z,17.1,nmol/L,saliva,30.0,SLP-S01-N00-W,synthetic,True,Synthetic salivary cortisol (context only; not an alertness indicator)
+CRT-S01-D03,AST-S01,MISSION-SLEEP-DEMO-01,2026-10-05T07:21:00Z,20.2,nmol/L,saliva,30.0,SLP-S01-N03-W,synthetic,True,Synthetic salivary cortisol (context only; not an alertness indicator)
+CRT-S01-D06,AST-S01,MISSION-SLEEP-DEMO-01,2026-10-08T07:11:00Z,13.2,nmol/L,saliva,30.0,SLP-S01-N06-W,synthetic,True,Synthetic salivary cortisol (context only; not an alertness indicator)
+CRT-S01-D09,AST-S01,MISSION-SLEEP-DEMO-01,2026-10-11T06:45:00Z,10.2,nmol/L,saliva,30.0,SLP-S01-N09-W,synthetic,True,Synthetic salivary cortisol (context only; not an alertness indicator)
+CRT-S01-D12,AST-S01,MISSION-SLEEP-DEMO-01,2026-10-14T07:05:00Z,14.7,nmol/L,saliva,30.0,SLP-S01-N12-W,synthetic,True,Synthetic salivary cortisol (context only; not an alertness indicator)
+CRT-S03-D00,AST-S03,MISSION-SLEEP-DEMO-01,2026-10-02T07:26:00Z,15.8,nmol/L,saliva,30.0,SLP-S03-N00-W,synthetic,True,Synthetic salivary cortisol (context only; not an alertness indicator)
+CRT-S03-D03,AST-S03,MISSION-SLEEP-DEMO-01,2026-10-05T06:43:00Z,16.3,nmol/L,saliva,30.0,SLP-S03-N03-W,synthetic,True,Synthetic salivary cortisol (context only; not an alertness indicator)
+CRT-S03-D06,AST-S03,MISSION-SLEEP-DEMO-01,2026-10-08T06:22:00Z,11.2,nmol/L,saliva,30.0,SLP-S03-N06-W,synthetic,True,Synthetic salivary cortisol (context only; not an alertness indicator)
+CRT-S03-D09,AST-S03,MISSION-SLEEP-DEMO-01,2026-10-11T06:41:00Z,15.7,nmol/L,saliva,30.0,SLP-S03-N09-W,synthetic,True,Synthetic salivary cortisol (context only; not an alertness indicator)
+CRT-S03-D12,AST-S03,MISSION-SLEEP-DEMO-01,2026-10-14T06:48:00Z,15.0,nmol/L,saliva,30.0,SLP-S03-N12-W,synthetic,True,Synthetic salivary cortisol (context only; not an alertness indicator)

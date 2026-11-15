@@ -1,0 +1,79 @@
+sleep_session_id,astronaut_id,mission_id,sleep_type,bedtime_utc,wake_time_utc,estimated_sleep_minutes,data_origin,is_synthetic,self_reported_quality,sensor_quality,sensor_coverage_fraction,missing_data_notes,notes
+SLP-S01-N00-M,AST-S01,MISSION-SLEEP-DEMO-01,main,2026-10-01T22:25:00Z,2026-10-02T06:40:00Z,480.0,manual,True,5,,,,Synthetic manual sleep log (self-reported)
+SLP-S01-N00-W,AST-S01,MISSION-SLEEP-DEMO-01,main,2026-10-01T22:28:00Z,2026-10-02T06:39:00Z,480.0,wearable,True,,good,0.94,,Synthetic fictional record
+SLP-S01-N01-M,AST-S01,MISSION-SLEEP-DEMO-01,main,2026-10-02T22:20:00Z,2026-10-03T06:30:00Z,450.0,manual,True,5,,,,Synthetic manual sleep log (self-reported)
+SLP-S01-N01-W,AST-S01,MISSION-SLEEP-DEMO-01,main,2026-10-02T22:23:00Z,2026-10-03T06:34:00Z,473.0,wearable,True,,good,0.947,,Synthetic fictional record
+SLP-S01-N02-W,AST-S01,MISSION-SLEEP-DEMO-01,main,2026-10-03T22:27:00Z,2026-10-04T06:14:00Z,455.0,wearable,True,,good,0.961,,Synthetic fictional record
+SLP-S01-N02-M,AST-S01,MISSION-SLEEP-DEMO-01,main,2026-10-03T22:30:00Z,2026-10-04T06:15:00Z,435.0,manual,True,3,,,,Synthetic manual sleep log (self-reported)
+SLP-S01-N03-W,AST-S01,MISSION-SLEEP-DEMO-01,main,2026-10-04T22:37:00Z,2026-10-05T06:51:00Z,471.0,wearable,True,,good,0.94,,Synthetic fictional record
+SLP-S01-N03-M,AST-S01,MISSION-SLEEP-DEMO-01,main,2026-10-04T22:40:00Z,2026-10-05T06:45:00Z,465.0,manual,True,3,,,,Synthetic manual sleep log (self-reported)
+SLP-S01-N04-M,AST-S01,MISSION-SLEEP-DEMO-01,main,2026-10-05T22:20:00Z,2026-10-06T06:40:00Z,495.0,manual,True,5,,,,Synthetic manual sleep log (self-reported)
+SLP-S01-N04-W,AST-S01,MISSION-SLEEP-DEMO-01,main,2026-10-05T22:26:00Z,2026-10-06T06:42:00Z,476.0,wearable,True,,good,0.931,,Synthetic fictional record
+SLP-S01-N05-W,AST-S01,MISSION-SLEEP-DEMO-01,main,2026-10-06T22:07:00Z,2026-10-07T06:14:00Z,472.0,wearable,True,,good,0.977,,Synthetic fictional record
+SLP-S01-N05-M,AST-S01,MISSION-SLEEP-DEMO-01,main,2026-10-06T22:10:00Z,2026-10-07T06:15:00Z,480.0,manual,True,5,,,,Synthetic manual sleep log (self-reported)
+SLP-S01-N06-W,AST-S01,MISSION-SLEEP-DEMO-01,main,2026-10-07T22:38:00Z,2026-10-08T06:41:00Z,463.0,wearable,True,,good,0.983,,Synthetic fictional record
+SLP-S01-N06-M,AST-S01,MISSION-SLEEP-DEMO-01,main,2026-10-07T22:45:00Z,2026-10-08T06:45:00Z,480.0,manual,True,4,,,,Synthetic manual sleep log (self-reported)
+SLP-S01-N07-M,AST-S01,MISSION-SLEEP-DEMO-01,main,2026-10-08T21:50:00Z,2026-10-09T06:00:00Z,480.0,manual,True,3,,,,Synthetic manual sleep log (self-reported)
+SLP-S01-N07-W,AST-S01,MISSION-SLEEP-DEMO-01,main,2026-10-08T22:00:00Z,2026-10-09T05:54:00Z,457.0,wearable,True,,good,0.937,,Synthetic fictional record
+SLP-S01-N08-M,AST-S01,MISSION-SLEEP-DEMO-01,main,2026-10-09T22:35:00Z,2026-10-10T06:35:00Z,465.0,manual,True,5,,,,Synthetic manual sleep log (self-reported)
+SLP-S01-N08-W,AST-S01,MISSION-SLEEP-DEMO-01,main,2026-10-09T22:39:00Z,2026-10-10T06:39:00Z,457.0,wearable,True,,good,0.956,,Synthetic fictional record
+SLP-S01-N09-M,AST-S01,MISSION-SLEEP-DEMO-01,main,2026-10-10T22:25:00Z,2026-10-11T06:20:00Z,420.0,manual,True,4,,,,Synthetic manual sleep log (self-reported)
+SLP-S01-N09-W,AST-S01,MISSION-SLEEP-DEMO-01,main,2026-10-10T22:25:00Z,2026-10-11T06:15:00Z,443.0,wearable,True,,good,0.985,,Synthetic fictional record
+SLP-S01-N10-W,AST-S01,MISSION-SLEEP-DEMO-01,main,2026-10-11T22:39:00Z,2026-10-12T06:46:00Z,463.0,wearable,True,,good,0.974,,Synthetic fictional record
+SLP-S01-N10-M,AST-S01,MISSION-SLEEP-DEMO-01,main,2026-10-11T22:45:00Z,2026-10-12T06:45:00Z,465.0,manual,True,4,,,,Synthetic manual sleep log (self-reported)
+SLP-S01-N11-W,AST-S01,MISSION-SLEEP-DEMO-01,main,2026-10-12T22:18:00Z,2026-10-13T06:24:00Z,455.0,wearable,True,,good,0.961,,Synthetic fictional record
+SLP-S01-N11-M,AST-S01,MISSION-SLEEP-DEMO-01,main,2026-10-12T22:25:00Z,2026-10-13T06:25:00Z,465.0,manual,True,4,,,,Synthetic manual sleep log (self-reported)
+SLP-S01-N12-M,AST-S01,MISSION-SLEEP-DEMO-01,main,2026-10-13T22:20:00Z,2026-10-14T06:35:00Z,465.0,manual,True,4,,,,Synthetic manual sleep log (self-reported)
+SLP-S01-N12-W,AST-S01,MISSION-SLEEP-DEMO-01,main,2026-10-13T22:25:00Z,2026-10-14T06:35:00Z,467.0,wearable,True,,good,0.949,,Synthetic fictional record
+SLP-S01-N13-W,AST-S01,MISSION-SLEEP-DEMO-01,main,2026-10-14T22:37:00Z,2026-10-15T06:46:00Z,465.0,wearable,True,,good,0.952,,Synthetic fictional record
+SLP-S01-N13-M,AST-S01,MISSION-SLEEP-DEMO-01,main,2026-10-14T22:40:00Z,2026-10-15T06:40:00Z,480.0,manual,True,5,,,,Synthetic manual sleep log (self-reported)
+SLP-S02-N00-M,AST-S02,MISSION-SLEEP-DEMO-01,main,2026-10-01T22:30:00Z,2026-10-02T06:25:00Z,435.0,manual,True,4,,,,Synthetic manual sleep log (self-reported)
+SLP-S02-N00-W,AST-S02,MISSION-SLEEP-DEMO-01,main,2026-10-01T22:31:00Z,2026-10-02T06:30:00Z,450.0,wearable,True,,fair,0.971,,Synthetic record; fictional scheduled sleep shift +0 min
+SLP-S02-N01-W,AST-S02,MISSION-SLEEP-DEMO-01,main,2026-10-02T23:27:00Z,2026-10-03T07:08:00Z,446.0,wearable,True,,good,0.924,,Synthetic record; fictional scheduled sleep shift +45 min
+SLP-S02-N02-W,AST-S02,MISSION-SLEEP-DEMO-01,main,2026-10-04T00:02:00Z,2026-10-04T07:35:00Z,427.0,wearable,True,,good,0.893,,Synthetic record; fictional scheduled sleep shift +90 min
+SLP-S02-N03-M,AST-S02,MISSION-SLEEP-DEMO-01,main,2026-10-05T00:25:00Z,2026-10-05T07:50:00Z,405.0,manual,True,3,,,,Synthetic manual sleep log (self-reported)
+SLP-S02-N03-W,AST-S02,MISSION-SLEEP-DEMO-01,main,2026-10-05T00:25:00Z,2026-10-05T07:52:00Z,430.0,wearable,True,,good,0.901,,Synthetic record; fictional scheduled sleep shift +135 min
+SLP-S02-N04-W,AST-S02,MISSION-SLEEP-DEMO-01,main,2026-10-06T01:33:00Z,2026-10-06T09:18:00Z,445.0,wearable,True,,good,0.969,,Synthetic record; fictional scheduled sleep shift +180 min
+SLP-S02-N05-W,AST-S02,MISSION-SLEEP-DEMO-01,main,2026-10-07T01:55:00Z,2026-10-07T09:37:00Z,434.0,wearable,True,,fair,0.978,,Synthetic record; fictional scheduled sleep shift +225 min
+SLP-S02-N06-M,AST-S02,MISSION-SLEEP-DEMO-01,main,2026-10-08T03:00:00Z,2026-10-08T10:45:00Z,435.0,manual,True,3,,,,Synthetic manual sleep log (self-reported)
+SLP-S02-N06-W,AST-S02,MISSION-SLEEP-DEMO-01,main,2026-10-08T03:10:00Z,2026-10-08T10:48:00Z,438.0,wearable,True,,good,0.923,,Synthetic record; fictional scheduled sleep shift +270 min
+SLP-S02-N07-W,AST-S02,MISSION-SLEEP-DEMO-01,main,2026-10-09T03:43:00Z,2026-10-09T11:21:00Z,433.0,wearable,True,,good,0.92,,Synthetic record; fictional scheduled sleep shift +315 min
+SLP-S02-N08-W,AST-S02,MISSION-SLEEP-DEMO-01,main,2026-10-10T04:20:00Z,2026-10-10T11:55:00Z,437.0,wearable,True,,good,0.914,,Synthetic record; fictional scheduled sleep shift +360 min
+SLP-S02-N09-W,AST-S02,MISSION-SLEEP-DEMO-01,main,2026-10-11T04:36:00Z,2026-10-11T12:13:00Z,432.0,wearable,True,,good,0.962,,Synthetic record; fictional scheduled sleep shift +360 min
+SLP-S02-N09-M,AST-S02,MISSION-SLEEP-DEMO-01,main,2026-10-11T04:40:00Z,2026-10-11T12:05:00Z,405.0,manual,True,3,,,,Synthetic manual sleep log (self-reported)
+SLP-S02-N10-W,AST-S02,MISSION-SLEEP-DEMO-01,main,2026-10-12T04:36:00Z,2026-10-12T12:47:00Z,474.0,wearable,True,,fair,0.935,,Synthetic record; fictional scheduled sleep shift +360 min
+SLP-S02-N11-W,AST-S02,MISSION-SLEEP-DEMO-01,main,2026-10-13T04:32:00Z,2026-10-13T12:07:00Z,428.0,wearable,True,,good,0.973,,Synthetic record; fictional scheduled sleep shift +360 min
+SLP-S02-N12-M,AST-S02,MISSION-SLEEP-DEMO-01,main,2026-10-14T04:25:00Z,2026-10-14T12:00:00Z,435.0,manual,True,4,,,,Synthetic manual sleep log (self-reported)
+SLP-S02-N12-W,AST-S02,MISSION-SLEEP-DEMO-01,main,2026-10-14T04:26:00Z,2026-10-14T12:06:00Z,434.0,wearable,True,,good,0.929,,Synthetic record; fictional scheduled sleep shift +360 min
+SLP-S02-N13-W,AST-S02,MISSION-SLEEP-DEMO-01,main,2026-10-15T04:37:00Z,2026-10-15T12:24:00Z,445.0,wearable,True,,good,0.965,,Synthetic record; fictional scheduled sleep shift +360 min
+SLP-S03-N00-M,AST-S03,MISSION-SLEEP-DEMO-01,main,2026-10-01T22:50:00Z,2026-10-02T06:50:00Z,465.0,manual,True,4,,,,Synthetic manual sleep log (self-reported)
+SLP-S03-N00-W,AST-S03,MISSION-SLEEP-DEMO-01,main,2026-10-01T22:57:00Z,2026-10-02T06:56:00Z,450.0,wearable,True,,good,0.941,,Synthetic fictional record
+SLP-S03-N01-W,AST-S03,MISSION-SLEEP-DEMO-01,main,2026-10-02T22:50:00Z,2026-10-03T06:30:00Z,438.0,wearable,True,,good,0.948,,Synthetic fictional record
+SLP-S03-N02-W,AST-S03,MISSION-SLEEP-DEMO-01,main,2026-10-03T23:09:00Z,2026-10-04T06:20:00Z,409.0,wearable,True,,good,0.942,,Synthetic fictional record
+SLP-S03-N02-M,AST-S03,MISSION-SLEEP-DEMO-01,main,2026-10-03T23:10:00Z,2026-10-04T06:20:00Z,390.0,manual,True,4,,,,Synthetic manual sleep log (self-reported)
+SLP-S03-N03-W,AST-S03,MISSION-SLEEP-DEMO-01,main,2026-10-04T22:50:00Z,2026-10-05T06:13:00Z,415.0,wearable,True,,good,0.945,,Synthetic fictional record
+SLP-S03-N04-M,AST-S03,MISSION-SLEEP-DEMO-01,main,2026-10-05T22:40:00Z,2026-10-06T06:35:00Z,450.0,manual,True,4,,,,Synthetic manual sleep log (self-reported)
+SLP-S03-N04-W,AST-S03,MISSION-SLEEP-DEMO-01,main,2026-10-05T22:48:00Z,2026-10-06T06:27:00Z,441.0,wearable,True,,good,0.955,,Synthetic fictional record
+SLP-S03-N05-W,AST-S03,MISSION-SLEEP-DEMO-01,main,2026-10-07T01:00:00Z,2026-10-07T06:04:00Z,281.0,wearable,True,,good,0.969,,Synthetic fictional record
+SLP-S03-N06-W,AST-S03,MISSION-SLEEP-DEMO-01,main,2026-10-08T01:03:00Z,2026-10-08T05:52:00Z,264.0,wearable,True,,good,0.979,,Synthetic fictional record
+SLP-S03-N06-M,AST-S03,MISSION-SLEEP-DEMO-01,main,2026-10-08T01:05:00Z,2026-10-08T05:50:00Z,255.0,manual,True,1,,,,Synthetic manual sleep log (self-reported)
+SLP-S03-N07-W,AST-S03,MISSION-SLEEP-DEMO-01,main,2026-10-09T01:02:00Z,2026-10-09T06:02:00Z,279.0,wearable,True,,good,0.979,,Synthetic fictional record
+SLP-S03-D07-NAP-W,AST-S03,MISSION-SLEEP-DEMO-01,nap,2026-10-09T13:38:00Z,2026-10-09T14:10:00Z,26.0,wearable,True,,good,0.945,,Synthetic daytime nap
+SLP-S03-N08-W,AST-S03,MISSION-SLEEP-DEMO-01,main,2026-10-10T00:45:00Z,2026-10-10T06:13:00Z,316.0,wearable,True,,good,0.987,,Synthetic fictional record
+SLP-S03-N08-M,AST-S03,MISSION-SLEEP-DEMO-01,main,2026-10-10T00:50:00Z,2026-10-10T06:20:00Z,315.0,manual,True,2,,,,Synthetic manual sleep log (self-reported)
+SLP-S03-N09-W,AST-S03,MISSION-SLEEP-DEMO-01,main,2026-10-11T01:01:00Z,2026-10-11T06:11:00Z,287.0,wearable,True,,good,0.989,,Synthetic fictional record
+SLP-S03-D09-NAP-W,AST-S03,MISSION-SLEEP-DEMO-01,nap,2026-10-11T13:30:00Z,2026-10-11T13:56:00Z,20.0,wearable,True,,good,0.972,,Synthetic daytime nap
+SLP-S03-N10-W,AST-S03,MISSION-SLEEP-DEMO-01,main,2026-10-12T01:13:00Z,2026-10-12T06:17:00Z,282.0,wearable,True,,good,0.927,,Synthetic fictional record
+SLP-S03-N10-M,AST-S03,MISSION-SLEEP-DEMO-01,main,2026-10-12T01:15:00Z,2026-10-12T06:20:00Z,300.0,manual,True,2,,,,Synthetic manual sleep log (self-reported)
+SLP-S03-N11-W,AST-S03,MISSION-SLEEP-DEMO-01,main,2026-10-13T01:06:00Z,2026-10-13T06:06:00Z,283.0,wearable,True,,good,0.986,,Synthetic fictional record
+SLP-S03-D11-NAP-W,AST-S03,MISSION-SLEEP-DEMO-01,nap,2026-10-13T13:36:00Z,2026-10-13T14:07:00Z,25.0,wearable,True,,good,0.915,,Synthetic daytime nap
+SLP-S03-N12-M,AST-S03,MISSION-SLEEP-DEMO-01,main,2026-10-14T01:10:00Z,2026-10-14T06:10:00Z,285.0,manual,True,2,,,,Synthetic manual sleep log (self-reported)
+SLP-S03-N12-W,AST-S03,MISSION-SLEEP-DEMO-01,main,2026-10-14T01:10:00Z,2026-10-14T06:18:00Z,285.0,wearable,True,,good,0.977,,Synthetic fictional record
+SLP-S03-N13-W,AST-S03,MISSION-SLEEP-DEMO-01,main,2026-10-15T01:04:00Z,2026-10-15T06:03:00Z,282.0,wearable,True,,good,0.939,,Synthetic fictional record
+SLP-S04-N00-M,AST-S04,MISSION-SLEEP-DEMO-01,main,2026-10-01T22:35:00Z,2026-10-02T06:25:00Z,435.0,manual,True,4,,,,Synthetic manual sleep log (self-reported)
+SLP-S04-N01-M,AST-S04,MISSION-SLEEP-DEMO-01,main,2026-10-02T23:30:00Z,2026-10-03T06:10:00Z,360.0,manual,True,2,,,,Synthetic manual sleep log (self-reported)
+SLP-S04-N02-W,AST-S04,MISSION-SLEEP-DEMO-01,main,2026-10-03T22:41:00Z,2026-10-04T06:13:00Z,375.0,wearable,True,,poor,0.55,Intermittent sensor contact; stage estimates unavailable,Synthetic fictional record
+SLP-S04-N04-W,AST-S04,MISSION-SLEEP-DEMO-01,main,2026-10-05T23:03:00Z,2026-10-06T06:11:00Z,,wearable,True,,unusable,0.08,Sensor signal insufficient; sleep could not be estimated,Synthetic fictional record
+SLP-S04-N05-M,AST-S04,MISSION-SLEEP-DEMO-01,main,2026-10-06T23:00:00Z,2026-10-07T06:40:00Z,,manual,True,,,,No sleep estimate or quality rating reported,Synthetic manual sleep log (self-reported)
+SLP-S04-N10-M,AST-S04,MISSION-SLEEP-DEMO-01,main,2026-10-11T23:15:00Z,2026-10-12T07:20:00Z,420.0,manual,True,2,,,,Synthetic manual sleep log (self-reported)
+SLP-S04-N12-W,AST-S04,MISSION-SLEEP-DEMO-01,main,2026-10-13T23:06:00Z,2026-10-14T07:03:00Z,446.0,wearable,True,,fair,0.81,Coverage below full night,Synthetic fictional record

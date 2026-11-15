@@ -1,0 +1,44 @@
+{
+  "dataset": "astroguard-sleep-alertness-synthetic",
+  "generator_version": "1.0",
+  "seed": 20261001,
+  "is_synthetic": true,
+  "disclaimer": "Fictional synthetic data for software demonstration only. Not real astronaut data. Values, scenario effects and scoring parameters are not clinically validated and must not be used for medical decisions.",
+  "mission": {
+    "mission_id": "MISSION-SLEEP-DEMO-01",
+    "mission_name": "Fictional Sleep & Alertness Demo Mission"
+  },
+  "protocol": {
+    "protocol_version": "astroguard-pvt-inspired-v0.1-synthetic",
+    "test_duration_ms": 180000,
+    "lapse_threshold_ms": 500.0,
+    "false_start_threshold_ms": 100.0,
+    "note": "Scoring parameters label trials only; they are not alert thresholds."
+  },
+  "astronauts": [
+    {
+      "astronaut_id": "AST-S01",
+      "display_name": "Synthetic Crew S01",
+      "scenario_key": "stable_sleep_stable_alertness",
+      "description": "Regular main sleep (~8 h in bed) with stable reaction-time performance. Manual log and wearable recording each night."
+    },
+    {
+      "astronaut_id": "AST-S02",
+      "display_name": "Synthetic Crew S02",
+      "scenario_key": "shifted_schedule_no_decline",
+      "description": "Sleep window shifts ~45 min later per night for 8 nights (+6 h), duration maintained; no demonstrated performance decline."
+    },
+    {
+      "astronaut_id": "AST-S03",
+      "display_name": "Synthetic Crew S03",
+      "scenario_key": "reduced_sleep_slower_reactions",
+      "description": "Normal sleep for 5 nights, then ~5 h in bed with occasional naps; reaction times slow and lapses increase (illustrative)."
+    },
+    {
+      "astronaut_id": "AST-S04",
+      "display_name": "Synthetic Crew S04",
+      "scenario_key": "insufficient_or_missing_data",
+      "description": "Sparse manual logs, poor/unusable wearable signal, missing stages, missing nights and an incomplete assessment."
+    }
+  ]
+}
