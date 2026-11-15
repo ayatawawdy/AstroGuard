@@ -1,5 +1,7 @@
 
 from pathlib import Path
+import sys
+
 import pandas as pd
 
 # Locate the generated dataset
@@ -34,8 +36,9 @@ METRIC_UNITS = {
 }
 
 
-def validate_data():
-    df = pd.read_csv(DATA_FILE)
+def validate_data(data_file=None):
+    """Validate the dataset and return a list of error messages (empty if valid)."""
+    df = pd.read_csv(data_file if data_file is not None else DATA_FILE)
 
     print("Starting data validation...")
     errors = []
@@ -87,7 +90,8 @@ def validate_data():
             errors.append("Synthetic data not correctly labeled")
 
     print(f"Total records: {len(df)}")
-    print(f"Astronauts: {df['astronaut_id'].nunique()}")
+    if "astronaut_id" in df.columns:
+        print(f"Astronauts: {df['astronaut_id'].nunique()}")
 
     if errors:
         print("\nVALIDATION FAILED")
@@ -97,6 +101,15 @@ def validate_data():
         print("\nVALIDATION PASSED")
         print("All basic schema checks passed!")
 
+    return errors
+
+
+def main(argv=None):
+    """Command-line entry point. Returns 0 when valid and 1 when validation fails."""
+    args = sys.argv[1:] if argv is None else argv
+    errors = validate_data(Path(args[0]) if args else None)
+    return 1 if errors else 0
+
 
 if __name__ == "__main__":
-    validate_data()
+    sys.exit(main())

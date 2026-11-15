@@ -1,10 +1,13 @@
 
 from pathlib import Path
 from tempfile import TemporaryDirectory
+import subprocess
+import sys
 import unittest
 import pandas as pd
 
 from clean_data import clean_data
+from validate_data import main, validate_data
 
 BASE_DIR = Path(__file__).resolve().parent
 SOURCE_FILE = BASE_DIR / "synthetic" / "health_measurements.csv"
@@ -108,6 +111,54 @@ class TestDataPipeline(unittest.TestCase):
             SOURCE_FILE.read_bytes(),
             original_bytes
         )
+
+
+class TestValidationExitStatus(unittest.TestCase):
+
+    def run_validator(self, *args):
+        return subprocess.run(
+            [sys.executable, str(BASE_DIR / "validate_data.py"), *args],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+
+    def test_valid_dataset_exits_zero(self):
+        self.assertEqual(validate_data(), [])
+        completed = self.run_validator()
+        self.assertEqual(completed.returncode, 0, completed.stdout)
+        self.assertIn("VALIDATION PASSED", completed.stdout)
+
+    def test_invalid_dataset_exits_nonzero(self):
+        df = pd.read_csv(SOURCE_FILE)
+        df.loc[0, "unit"] = "mmHg"
+        df.loc[1, "measurement_id"] = df.loc[0, "measurement_id"]
+
+        with TemporaryDirectory() as temp:
+            bad_file = Path(temp) / "invalid.csv"
+            df.to_csv(bad_file, index=False)
+
+            errors = validate_data(bad_file)
+            self.assertIn("Invalid measurement units", errors)
+            self.assertIn("Duplicate measurement IDs", errors)
+            self.assertEqual(main([str(bad_file)]), 1)
+
+            completed = self.run_validator(str(bad_file))
+
+        self.assertEqual(completed.returncode, 1, completed.stdout)
+        self.assertIn("VALIDATION FAILED", completed.stdout)
+
+    def test_missing_columns_exits_nonzero(self):
+        df = pd.read_csv(SOURCE_FILE).drop(columns=["unit", "astronaut_id"])
+
+        with TemporaryDirectory() as temp:
+            bad_file = Path(temp) / "missing_columns.csv"
+            df.to_csv(bad_file, index=False)
+            completed = self.run_validator(str(bad_file))
+
+        self.assertEqual(completed.returncode, 1, completed.stdout)
+        self.assertIn("Missing columns", completed.stdout)
 
 
 if __name__ == "__main__":
