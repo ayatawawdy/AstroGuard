@@ -10,21 +10,31 @@ from uuid import uuid4
 def get_measurements(
     astronaut_id: str,
     metric_type: str | None = None,
-    limit: int = 100
+    limit: int = 100,
+    *,
+    mission_id: str | None = None,
+    db_path=None,
 ) -> list[dict]:
     """
     Retrieve health measurements for an astronaut.
 
     Optional filters:
     - metric_type: specific health indicator
-    - limit: maximum number of returned records
+    - limit: maximum number of returned records (1–1000)
+    - mission_id: restrict results to one mission
+    - db_path: optional SQLite file; None uses the configured database
     """
 
-    if not astronaut_id.strip():
+    if not isinstance(astronaut_id, str) or not astronaut_id.strip():
         raise ValueError("Astronaut ID is required")
 
-    if not 1 <= limit <= 1000:
+    if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= 1000:
         raise ValueError("Limit must be between 1 and 1000")
+
+    if mission_id is not None and (not isinstance(mission_id, str) or not mission_id.strip()):
+        raise ValueError("Mission ID must be a nonempty string")
+    if metric_type is not None and (not isinstance(metric_type, str) or not metric_type.strip()):
+        raise ValueError("Metric type must be a nonempty string")
 
     query = """
         SELECT *
@@ -38,22 +48,26 @@ def get_measurements(
         query += " AND metric_type = ?"
         params.append(metric_type)
 
+    if mission_id is not None:
+        query += " AND mission_id = ?"
+        params.append(mission_id)
+
     query += """
         ORDER BY timestamp_utc DESC, measurement_id DESC
         LIMIT ?
     """
     params.append(limit)
 
-    with closing(get_connection()) as conn:
+    with closing(get_connection() if db_path is None else get_connection(db_path)) as conn:
         rows = conn.execute(query, params).fetchall()
 
     return [dict(row) for row in rows]
 
 
-def get_astronauts() -> list[dict]:
+def get_astronauts(*, db_path=None) -> list[dict]:
     """Retrieve all registered astronauts."""
 
-    with closing(get_connection()) as conn:
+    with closing(get_connection() if db_path is None else get_connection(db_path)) as conn:
         rows = conn.execute(
             """
             SELECT astronaut_id, display_name
@@ -259,3 +273,21 @@ def delete_measurement(measurement_id: str) -> bool:
             )
 
             return result.rowcount > 0
+
+
+def get_missions(astronaut_id: str, *, db_path=None) -> list[dict]:
+    """List missions with recorded measurements for an astronaut, sorted by ID.
+
+    Unknown astronauts and astronauts without measurements return an empty list.
+    The current schema has no separate astronaut-to-mission assignment table.
+    """
+    if not isinstance(astronaut_id, str) or not astronaut_id.strip():
+        raise ValueError("Astronaut ID must be a nonempty string")
+    with closing(get_connection() if db_path is None else get_connection(db_path)) as conn:
+        rows = conn.execute(
+            """SELECT DISTINCT m.mission_id, m.mission_name
+               FROM missions AS m JOIN measurements AS r ON r.mission_id = m.mission_id
+               WHERE r.astronaut_id = ? ORDER BY m.mission_id""",
+            (astronaut_id,),
+        ).fetchall()
+    return [dict(row) for row in rows]

@@ -26,5 +26,3 @@ data/processed/
 # Editor files
 .vscode/
 .idea/
-# Automatically created by mypy
-*
