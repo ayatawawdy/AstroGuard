@@ -77,12 +77,33 @@ hr {
 # DEMONSTRATION DATA
 # -----------------------------------
 
-health_data = pd.DataFrame({
-    "Day": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-    "Heart Rate": [70, 72, 71, 75, 79, 83, 86],
-    "Sleep Hours": [8.0, 7.8, 7.5, 7.0, 6.5, 6.0, 5.5],
-    "Activity": [9200, 9000, 8800, 8600, 8400, 8200, 7800]
+
+raw_data = pd.read_csv("data/synthetic/health_measurements.csv")
+
+raw_data["timestamp_utc"] = pd.to_datetime(
+    raw_data["timestamp_utc"], utc=True
+)
+
+astronaut_id = raw_data["astronaut_id"].iloc[0]
+astronaut_data = raw_data[
+    raw_data["astronaut_id"] == astronaut_id
+]
+
+health_data = astronaut_data.pivot_table(
+    index="timestamp_utc",
+    columns="metric_type",
+    values="value",
+    aggfunc="mean"
+).sort_index().tail(7).reset_index()
+
+health_data = health_data.rename(columns={
+    "heart_rate": "Heart Rate",
+    "sleep_duration": "Sleep Hours"
 })
+
+health_data["Day"] = health_data["timestamp_utc"].dt.strftime("%a")
+health_data["Activity"] = 0
+
 
 latest = health_data.iloc[-1]
 
@@ -329,24 +350,14 @@ if anomaly_detected:
 
 else:
 
-    st.markdown("""
-    <div style="
-        background:#123B36;
-        border:1px solid #2D8A75;
-        border-radius:16px;
-        padding:24px;
-        margin:20px 0;
-    ">
-        <h3 style="color:#68F0C0;">
-            No Anomaly Detected
-        </h3>
-
-        <p style="color:#D4E0F0;">
-            No unusual combined changes were identified
-            by the current demonstration rules.
-        </p>
+   
+   st.markdown("""
+    <div style="background:#123B36; border:1px solid #2D8A75; border-radius:16px; padding:24px; margin:20px 0;">
+    <h3 style="color:#68F0C0;">No Anomaly Detected</h3>
+    <p style="color:#D4E0F0;">No unusual combined changes were identified by the current demonstration rules.</p>
     </div>
-    """, unsafe_allow_html=True)
+     """, unsafe_allow_html=True)
+
 
 st.caption(
     "SIMULATED DATA | RULE-BASED DETECTION | "
