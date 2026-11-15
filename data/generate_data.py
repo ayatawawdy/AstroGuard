@@ -44,7 +44,8 @@ for astronaut_id in ASTRONAUTS:
             "mood": rng.randint(1, 5),
             "stress_level": rng.randint(1, 10),
         }
-
+        if astronaut_id == "AST-001" and day == DAYS - 1:
+            measurements["heart_rate"] = 110
         for metric, value in measurements.items():
             records.append({
                 "measurement_id": f"M-{len(records)+1:05d}",

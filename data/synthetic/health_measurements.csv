@@ -231,7 +231,7 @@ M-00229,AST-001,MISSION-DEMO-01,2026-10-29T08:00:00Z,blood_glucose,97.0,mg/dL,sy
 M-00230,AST-001,MISSION-DEMO-01,2026-10-29T08:00:00Z,sleep_duration,7.0,hours,synthetic,True,Synthetic daily measurement
 M-00231,AST-001,MISSION-DEMO-01,2026-10-29T08:00:00Z,mood,4.0,1-5,synthetic,True,Synthetic daily measurement
 M-00232,AST-001,MISSION-DEMO-01,2026-10-29T08:00:00Z,stress_level,1.0,1-10,synthetic,True,Synthetic daily measurement
-M-00233,AST-001,MISSION-DEMO-01,2026-10-30T08:00:00Z,heart_rate,80.0,bpm,synthetic,True,Synthetic daily measurement
+M-00233,AST-001,MISSION-DEMO-01,2026-10-30T08:00:00Z,heart_rate,110.0,bpm,synthetic,True,Synthetic daily measurement
 M-00234,AST-001,MISSION-DEMO-01,2026-10-30T08:00:00Z,systolic_bp,108.0,mmHg,synthetic,True,Synthetic daily measurement
 M-00235,AST-001,MISSION-DEMO-01,2026-10-30T08:00:00Z,diastolic_bp,85.0,mmHg,synthetic,True,Synthetic daily measurement
 M-00236,AST-001,MISSION-DEMO-01,2026-10-30T08:00:00Z,body_temperature,36.2,°C,synthetic,True,Synthetic daily measurement
